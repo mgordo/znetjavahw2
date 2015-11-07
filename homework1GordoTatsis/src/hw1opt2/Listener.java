@@ -29,18 +29,19 @@ public class Listener extends Thread {
 	
 	@Override
 	public void run(){
-		
+		//TODO We will probably need to change this for when we need to close the thread
 		while(true){
 			Socket socket=null;
 			try {
 				socket = serversocket.accept();
+				Actions newaction = new Actions(socket, peer);
+				newaction.run();
 			} catch (IOException e) {
 				System.out.println("Failed to establish connection while listening");
 				e.printStackTrace();
 			}
 			
-			Actions newaction = new Actions(socket, peer);
-			newaction.run();
+			
 			
 		}
 		

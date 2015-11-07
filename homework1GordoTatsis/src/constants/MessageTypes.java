@@ -9,11 +9,11 @@ package constants;
  */
 public class MessageTypes {
 	
-	public final String SEND_MOVE = "send_move";
-	public final String READY = "ready";
-	public final String HELLO = "hello";
-	public final String BYE = "bye";
-	public final String ACT_FAST = "act_fast";
-	public final String ALIVE = "alive";
+	public static final String SEND_MOVE = "send_move";
+	public static final String READY = "ready";
+	public static final String HELLO = "hello";
+	public static final String BYE = "bye";
+	public static final String ACT_FAST = "act_fast";
+	public static final String ALIVE = "alive";
 
 }
