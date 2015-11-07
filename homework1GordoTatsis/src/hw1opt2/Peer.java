@@ -22,16 +22,18 @@ public class Peer {
 	private ArrayList<String> peer_names;
 	private int score;
 	private Listener listener_thread;
+	private String myhostname;
+	
+	/**
+	 * Constructor
+	 * @param hostname
+	 */
+	public Peer(String hostname){
+		
+	}
 	
 	
-
-	public synchronized States getState() {
-		return state;
-	}
-
-	public synchronized void setState(States state) {
-		this.state = state;
-	}
+	
 
 	public ConcurrentHashMap<String,Socket> getSocket_list() {
 		return socket_list;
@@ -51,6 +53,21 @@ public class Peer {
 		this.movement_list.remove(hostname);
 		this.socket_list.remove(hostname);
 		this.peer_names.remove(peer_names.indexOf(hostname));
+	}
+
+	public String getMyhostname() {
+		return myhostname;
+	}
+
+	public void setMyhostname(String myhostname) {
+		this.myhostname = myhostname;
+	}
+	public synchronized States getState() {
+		return state;
+	}
+
+	public synchronized void setState(States state) {
+		this.state = state;
 	}
 
 }
