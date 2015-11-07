@@ -15,5 +15,8 @@ public class MessageTypes {
 	public static final String BYE = "bye";
 	public static final String ACT_FAST = "act_fast";
 	public static final String ALIVE = "alive";
+	public static final String HOST = "host";
+	public static final String NEED_HOSTS = "need_hosts";
+	
 
 }
