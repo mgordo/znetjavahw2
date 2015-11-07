@@ -78,8 +78,9 @@ public class Actions implements Runnable {
 			
 		}else if(msg.get(0)==MessageTypes.ACT_FAST){
 			
-		}else if(msg.get(0)==MessageTypes.ALIVE){//TODO Perhaps this type of message does not go here. Check in the future
 			
+		}else if(msg.get(0)==MessageTypes.ALIVE){
+			//TODO Here we should stop the timeout process for that peer and create a new one, or restart the timer			
 		}
 		
 		
