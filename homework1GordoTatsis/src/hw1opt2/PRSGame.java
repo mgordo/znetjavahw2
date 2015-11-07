@@ -13,7 +13,7 @@ public class PRSGame {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+		// TODO Here goes the gui and in this class we will have the functions for updating it and interacting with the user
 
 	}
 

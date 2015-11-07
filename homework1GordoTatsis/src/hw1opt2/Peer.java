@@ -28,8 +28,8 @@ public class Peer {
 	 * Constructor
 	 * @param hostname
 	 */
-	public Peer(String hostname){
-		
+	public Peer(String hostname,int port){
+		this.myhostname=hostname;
 	}
 	
 	
@@ -68,6 +68,18 @@ public class Peer {
 
 	public synchronized void setState(States state) {
 		this.state = state;
+	}
+
+
+
+	/**
+	 * This method registers a move from another peer
+	 * @param hostname
+	 * @param move
+	 */
+	public void updateMove(String hostname, String move) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

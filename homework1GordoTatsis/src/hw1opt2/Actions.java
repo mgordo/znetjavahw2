@@ -68,7 +68,8 @@ public class Actions implements Runnable {
 		}
 		//Message read stored in ArralyList msg
 		if(msg.get(0)==MessageTypes.SEND_MOVE){
-			
+			peer.updateMove(msg.get(1),msg.get(2));
+			//TODO call main thread
 			
 		}else if(msg.get(0)==MessageTypes.READY){
 			
