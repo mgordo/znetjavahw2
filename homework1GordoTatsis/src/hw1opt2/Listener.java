@@ -41,7 +41,7 @@ public class Listener extends Thread {
 			
 			Actions newaction = new Actions(socket, peer);
 			newaction.run();
-			this.
+			
 		}
 		
 		
