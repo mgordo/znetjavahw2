@@ -18,7 +18,7 @@ public class Listener extends Thread {
 		}
 		myport=port;
 		try {
-			serversocket = new ServerSocket(port);
+			serversocket = new ServerSocket(myport);
 		} catch (IOException e) {
 			System.out.println("Error generating socket");
 			e.printStackTrace();

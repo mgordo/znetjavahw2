@@ -102,6 +102,7 @@ public class Actions implements Runnable {
 			
 			
 		}else if(msg.get(0)==MessageTypes.NEED_HOSTS){
+			
 			peer.sendHosts(msg.get(1));
 			
 		}else if(msg.get(0)==MessageTypes.HOST){
