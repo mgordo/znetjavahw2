@@ -32,10 +32,10 @@ public class Broadcast {
 	//TODO: (optional) add timing information, discard games seen too far in the past
 	private static final ConcurrentHashMap<String,GameInfo> gameList = new ConcurrentHashMap<String,GameInfo>();
 	
-	static{
+	public static void init(){
 		try{
 			broadcastingSocket = new DatagramSocket();	
-			listeningSocket = new DatagramSocket();		
+			listeningSocket = new DatagramSocket(null);		
 			listeningSocket.setReuseAddress(true);
 			listeningSocket.setBroadcast(true);
 			listeningSocket.bind(new InetSocketAddress(port));
@@ -57,11 +57,11 @@ public class Broadcast {
 			        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 			        listeningSocket.receive(packet);
 					String message = new String(packet.getData()).trim();
-					System.out.println("Received message");
 					if (message.startsWith("P2PRPS")){
 						String messageParts[] = message.split(" ");
 						GameInfo info = new GameInfo(messageParts[1], packet.getAddress(), Integer.parseInt(messageParts[2]));
 						gameList.put(info.name, info);
+						//System.out.println("DBG: Broadcast:  Received message from "+messageParts[1]+", at "+packet.getAddress()+":"+Integer.parseInt(messageParts[2]));
 					}
 				}
 				catch (IOException e) {
@@ -81,9 +81,11 @@ public class Broadcast {
 			if (!state && (futureBroadcast != null)){
 				futureBroadcast.cancel(false);
 				futureBroadcast = null;
+				System.out.println("DBG: Broadcast: broadcasting off");
 			}
 			if (state && (futureBroadcast == null || futureBroadcast.isDone())){
-				futureBroadcast = broadcastScheduler.schedule(broadcastTask, delay, TimeUnit.SECONDS);
+				futureBroadcast = broadcastScheduler.schedule(broadcastTask, delay, TimeUnit.MILLISECONDS);
+				System.out.println("DBG: Broadcast: broadcasting on");
 			}
 		}
 	}
@@ -99,16 +101,17 @@ public class Broadcast {
 				Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
 				while (interfaces.hasMoreElements()) {
 					NetworkInterface netInterface = interfaces.nextElement();
-					
+					//don't advertise on loopback interfaces, since a peer connecting through loopback will be later advertised with the loopback address, limiting connectivity
+					if (netInterface.isLoopback())
+						continue;
 					for (InterfaceAddress address : netInterface.getInterfaceAddresses()) {
 						if (address.getBroadcast() == null)
 							continue;
 						
 						try {
-							//TODO: replace IP below with actual IP, taken from TCP listener class 
 							DatagramPacket broadcastPacket = new DatagramPacket(broadcastMessage, broadcastMessage.length, address.getBroadcast(), port);
 							broadcastingSocket.send(broadcastPacket);
-							System.out.println("Sent message");
+							//System.out.println("DBG: Broadcast:  Sent message");
 						}
 						catch (Exception e1) {
 							e1.printStackTrace();
@@ -121,7 +124,7 @@ public class Broadcast {
 			}
 
 			synchronized (broadcastingLock) {
-				futureBroadcast = broadcastScheduler.schedule(broadcastTask, delay, TimeUnit.SECONDS);
+				futureBroadcast = broadcastScheduler.schedule(broadcastTask, delay, TimeUnit.MILLISECONDS);
 			}
 		}
 	};
