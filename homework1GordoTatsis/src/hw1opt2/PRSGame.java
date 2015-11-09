@@ -6,10 +6,9 @@ package hw1opt2;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.InetAddress;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
@@ -17,15 +16,18 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.NumberFormatter;
 
 import hw1opt2.Broadcast.GameInfo;
 
 public class PRSGame extends JPanel{
+	private static final long serialVersionUID = 7503589667461115906L;
+
 	private static PRSGame instance;
 
-	private String playerName = "";
+	private String playerName = "test";
 	private int portTCP;
 
 	private static JFrame frame;
@@ -40,9 +42,11 @@ public class PRSGame extends JPanel{
     
 
     private final JPanel joinPanel = new JPanel();
+    private final JPanel directConnectPanel = new JPanel();
     private final JTextField remoteIpTextField = new JTextField();
     private final JFormattedTextField remotePortTextField = new JFormattedTextField();
     private final JButton connectButton = new JButton("Connect");
+    private final JLabel availableGamesInfoLabel = new JLabel("Available Games:");
     private final JPanel availableGamesPanel = new JPanel();
     private final JButton refreshButton = new JButton("Refresh Games");
     
@@ -68,6 +72,7 @@ public class PRSGame extends JPanel{
         frame.pack();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
+		Broadcast.init();
 	}
 	
 	/**
@@ -91,12 +96,10 @@ public class PRSGame extends JPanel{
 			public void actionPerformed(ActionEvent e) {
 				if (!checkInitFields())
 					return;
-				if (!startTCPListener())
-					return;
+				//TODO: start TCP Listener
+				portTCP = Integer.parseInt(portTextField.getText());
 				playerName = nameTextField.getText();
-				removeAll();
-				add(joinPanel);
-				revalidate();
+				switchPanel(joinPanel);
 			}
 		});
 		
@@ -105,13 +108,11 @@ public class PRSGame extends JPanel{
 			public void actionPerformed(ActionEvent e) {
 				if (!checkInitFields())
 					return;
-				if (!startTCPListener())
-					return;
+				//TODO: start TCP Listener
+				portTCP = Integer.parseInt(portTextField.getText());
 				playerName = nameTextField.getText();
 				Broadcast.setBroadcasting(true);
-				removeAll();
-				add(gamePanel);
-				revalidate();
+				switchPanel(gamePanel);
 			}
 		});
 	
@@ -151,20 +152,6 @@ public class PRSGame extends JPanel{
 		return true;
 	}
 	
-	/**
-	 * Starts TCP listener, creates Dialog if a problem exists (like invalid port number)
-	 * @return false if problem in empty, true if filled  
-	 */
-	
-	private boolean startTCPListener(){
-		//TODO: actually start TCP message listener, check if it works
-		if (false){
-			JOptionPane.showMessageDialog(frame, "Cannot start listener on the specified port.", "Error!", JOptionPane.WARNING_MESSAGE);
-			return false;
-		}
-		portTCP = Integer.parseInt(portTextField.getText());
-		return true;
-	}
 	
 	/**
 	 * Creates the joinPanel, containing the available games, and buttons to join them
@@ -177,9 +164,7 @@ public class PRSGame extends JPanel{
 				if (!checkJoinFields())
 					return;
 				//TODO: connect to game
-				removeAll();
-				add(gamePanel);
-				invalidate();
+				switchPanel(gamePanel);
 			}
 		});
 		
@@ -190,19 +175,24 @@ public class PRSGame extends JPanel{
 			}
 		});
 
-		joinPanel.setLayout(new GridLayout(0, 2));
-		availableGamesPanel.setLayout(new GridLayout(0, 2));
+		joinPanel.setLayout(new BoxLayout(joinPanel, BoxLayout.PAGE_AXIS));
+		
+		directConnectPanel.setLayout(new GridLayout(0, 3));
 
-	    remoteIpTextField.setToolTipText("Enter remote peer's ip");
-	    
-		remotePortTextField.setFormatterFactory(portFormatterFactory);
+	    remoteIpTextField.setToolTipText("Enter remote peer's IP address");
+	    remotePortTextField.setFormatterFactory(portFormatterFactory);
 	    remotePortTextField.setToolTipText("Enter remote peer's port");
-
-	    joinPanel.add(remoteIpTextField);
-	    joinPanel.add(remotePortTextField);
-	    joinPanel.add(connectButton);
+	    
+	    directConnectPanel.add(remoteIpTextField);
+	    directConnectPanel.add(remotePortTextField);
+	    directConnectPanel.add(connectButton);
+	    
+		availableGamesPanel.setLayout(new GridLayout(0, 2));
+		availableGamesPanel.add(availableGamesInfoLabel);
+		availableGamesPanel.add(refreshButton);
+		
+	    joinPanel.add(directConnectPanel);
 	    joinPanel.add(availableGamesPanel);
-		joinPanel.add(refreshButton);
 	}
 	
 	/**
@@ -227,7 +217,11 @@ public class PRSGame extends JPanel{
 	 */
 	private void updateAvailableGames(){
 		availableGamesPanel.removeAll();
+		availableGamesPanel.add(availableGamesInfoLabel);
+		availableGamesPanel.add(refreshButton);
 		for (GameInfo info : Broadcast.getGames()){
+			if (info.name.equals(playerName))
+				continue;
 		    JLabel gameNameLabel = new JLabel(info.name);
 		    JButton connectButton = new JButton("Connect");
 		    
@@ -235,14 +229,15 @@ public class PRSGame extends JPanel{
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					//TODO: connect to game
-					removeAll();
-					add(gamePanel);
+					switchPanel(gamePanel);
 				}
 			});
 
 			availableGamesPanel.add(gameNameLabel);
 			availableGamesPanel.add(connectButton);
 		}
+		frame.revalidate();
+		frame.pack();
 	}
 	
 	/**
@@ -251,6 +246,34 @@ public class PRSGame extends JPanel{
 	private void createGamePanel(){
 		//TODO: game panel
 		
+	}
+	
+	/**
+	 * Switches visibility to another panel
+	 * @param panel: the panel to switch to
+	 */
+	private void switchPanel(JPanel panel){
+		if (panel.getParent() != null && panel.getParent() == this)
+			return;
+		removeAll();
+		add(panel);
+		revalidate();
+		frame.pack();
+	}
+	
+	/**
+	 * Returns to initscreen and produces a custom message, call in case of error in TCPListener
+	 * @param errorMessage false if problem in empty, true if filled  
+	 */
+	
+	public void TCPListenerError(final String errorMessage){
+		//TODO: actually start TCP message listener, check if it works
+		SwingUtilities.invokeLater(new Runnable() {
+		    public void run() {
+				JOptionPane.showMessageDialog(frame, "TCP Socket produced an error:\n"+errorMessage, "Error!", JOptionPane.WARNING_MESSAGE);
+		    	switchPanel(initPanel);
+		    }
+	    });
 	}
 	
 	/**
