@@ -1,6 +1,6 @@
 package constants;
 
-public enum States {
+public enum State {
 	
 	NOT_CONNECTED, CONNECTED, PLAYING, FINISHED_GAME, DISCONNECTING
 

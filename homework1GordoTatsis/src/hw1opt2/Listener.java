@@ -7,9 +7,11 @@ public class Listener extends Thread {
 	InetAddress localIP;
 	private int myport;
 	private ServerSocket serversocket;
+	private PRSGame gameListening;
 	
-	public Listener(Peer peer, int port){
+	public Listener(Peer peer, int port, PRSGame game){
 		this.peer=peer;
+		gameListening = game;
 		try {
 			localIP = InetAddress.getLocalHost();
 		} catch (UnknownHostException e) {
@@ -20,7 +22,7 @@ public class Listener extends Thread {
 		try {
 			serversocket = new ServerSocket(myport);
 		} catch (IOException e) {
-			System.out.println("Error generating socket");
+			System.out.println("Error generating listening socket");
 			e.printStackTrace();
 		} 
 		
@@ -34,7 +36,7 @@ public class Listener extends Thread {
 			Socket socket=null;
 			try {
 				socket = serversocket.accept();
-				Actions newaction = new Actions(socket, peer);
+				MessageParser newaction = new MessageParser(socket, peer, gameListening);
 				newaction.run();
 			} catch (IOException e) {
 				System.out.println("Failed to establish connection while listening");

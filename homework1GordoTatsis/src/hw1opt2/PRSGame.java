@@ -6,8 +6,9 @@ package hw1opt2;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.text.DecimalFormat;
-
+import constants.*;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
@@ -52,6 +53,7 @@ public class PRSGame extends JPanel{
     
     
     private final JPanel gamePanel = new JPanel();
+    private Peer myPeer;
     
     private static DefaultFormatterFactory portFormatterFactory;
     static{
@@ -84,6 +86,7 @@ public class PRSGame extends JPanel{
 		createGamePanel();
 		add(initPanel);
 		instance = this;
+		
 	}
 	
 	/**
@@ -296,4 +299,98 @@ public class PRSGame extends JPanel{
 	public static PRSGame getInstance(){
 		return instance;	
 	}
+
+	
+	private void finishGame() {
+		// TODO Method to be called when a game ends
+		
+	}
+	
+	
+	
+	/** METHODS FOR UPDATING THE GAME AFTER AN EVENT **/
+	/**
+	 * Method called when a peer sends its move
+	 * @param hostname Name of the host sending the move
+	 * @param move Move made
+	 */
+	public void moveMade(String hostname, String move) {
+		myPeer.updateMove(hostname, move);
+		if(myPeer.allPeersMoved()){
+			finishGame();
+			//TODO I would imagine here we don't redraw, instead that is done inside finishGame
+		}else{
+			//TODO call method for redraw if we are showing movements made
+		}
+		
+	}
+	
+
+	public void peerIsReady(String hostname) {
+		myPeer.setPeerReady(hostname);
+		if(myPeer.allPeersReady()){
+			//TODO Call some startGame function. Commenting because unsure if already exists
+			//startGame();
+		}else{
+			//TODO redraw if we are showing how many players are ready
+		}
+		
+	}
+
+	public void removePeer(String hostname) {
+		myPeer.removePeer(hostname);
+		if(myPeer.allPeersMoved()){
+			finishGame();
+			//TODO I would imagine here we don't redraw, instead that is done inside finishGame
+		}else{
+			//TODO check if we redraw here
+		}
+		
+	}
+
+	public void putNewPeer(String hostname, String ip, int port) {
+		try {
+			myPeer.putNewPeer(hostname, ip,port);
+		} catch (NumberFormatException e) {
+			System.out.println("Error converting number");
+			e.printStackTrace();
+			return;
+		} catch (IOException e) {
+			System.out.println("Error creating socket for hello message");
+			e.printStackTrace();
+			return;
+		}
+		//TODO probably redraw although it may depend on which game state we are at
+		
+	}
+
+	public void actFast() {
+		// TODO Create warning window calling the player to act fast
+		
+	}
+
+	public void hostAlive(String hostname) {
+		// TODO hostname is alive, so restart it timer
+		
+	}
+
+	public void addHost(String hostname, String ip, int port) {
+		try {
+			myPeer.putNewPeer(hostname, ip, port);
+		} catch (NumberFormatException e) {
+			System.out.println("Error converting number");
+			e.printStackTrace();
+			return;
+		} catch (IOException e) {
+			System.out.println("Error creating socket for hello message");
+			e.printStackTrace();
+			return;
+		}
+		//TODO probably redraw depending on the state of the game we're at
+		
+	}
+
+	
+	
+	
 }

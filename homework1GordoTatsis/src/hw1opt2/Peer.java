@@ -5,6 +5,7 @@ package hw1opt2;
 import constants.*;
 
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.concurrent.*;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -18,7 +19,7 @@ import java.net.*;
  */
 public class Peer {
 	
-	private States state=States.NOT_CONNECTED;
+	private State state=State.NOT_CONNECTED;
 	private ConcurrentHashMap<String,Socket> socket_list;
 	private ConcurrentHashMap<String,String> movement_list;
 	private ConcurrentHashMap<String,Boolean> ready_list;
@@ -32,13 +33,13 @@ public class Peer {
 	 * @param hostname Name of the Peer being instantiated
 	 * @param port Port in which the peer will listen to other peers
 	 */
-	public Peer(String hostname,int port){
+	public Peer(String hostname,int port,PRSGame game){
 		this.myhostname=hostname;
 		socket_list = new ConcurrentHashMap<String,Socket>();
 		movement_list = new ConcurrentHashMap<String,String>();
 		ready_list = new ConcurrentHashMap<String,Boolean>();
 		peer_names = new ArrayList<String>();
-		listener_thread = new Listener(this,port);
+		listener_thread = new Listener(this,port,game);
 		listener_thread.run();
 	}
 	
@@ -59,12 +60,12 @@ public class Peer {
 	 * @param port The port at which the host joining is listening
 	 * @throws IOException
 	 */
-	public void putNewPeer(String hostname, String ip, int port) throws IOException {
+	public synchronized void putNewPeer(String hostname, String ip, int port) throws IOException {
 		InetAddress ip_dest = InetAddress.getByName(ip);
 		Socket socket = new Socket(ip_dest,port);
 		this.socket_list.put(hostname, socket);
 		this.peer_names.add(hostname);
-		this.movement_list.put(hostname, Moves.NONE);
+		this.movement_list.put(hostname, Move.NONE);
 		ready_list.put(hostname, false);//TODO a new peer is by default not ready
 	}
 
@@ -74,7 +75,7 @@ public class Peer {
 	 * @param move One of the possible moves specified in constants.Moves
 	 * @param hostname Name of the hostname making the move
 	 */
-	public void setPeerMovement(String move, String hostname){
+	public synchronized void setPeerMovement(String move, String hostname){
 		this.movement_list.replace(hostname,move);
 	}
 	
@@ -83,7 +84,7 @@ public class Peer {
 	 * This method deletes a Peer from the P2P network. Each peer will call this method when they recieve a BYE message
 	 * @param hostname Name of the host disconnecting
 	 */
-	public void removePeer(String hostname){
+	public synchronized void removePeer(String hostname){
 		this.movement_list.remove(hostname);
 		this.socket_list.remove(hostname);
 		this.peer_names.remove(peer_names.indexOf(hostname));
@@ -111,7 +112,7 @@ public class Peer {
 	 * Returns the current state of this peer, which can be any of thos defined in constants.States
 	 * @return Any of the states defined in constants.States
 	 */
-	public synchronized States getState() {
+	public synchronized State getState() {
 		return state;
 	}
 
@@ -120,7 +121,7 @@ public class Peer {
 	 * Changes the state of this peer to any of the states defined in constants.States
 	 * @param state
 	 */
-	public synchronized void setState(States state) {
+	public synchronized void setState(State state) {
 		this.state = state;
 	}
 
@@ -130,8 +131,8 @@ public class Peer {
 	 * @param hostname The name of the peer making the move
 	 * @param move The move of the peer who sent the notification, which can be any of those defined in constants.Moves
 	 */
-	public void updateMove(String hostname, String move) {
-		// TODO Auto-generated method stub
+	public synchronized void updateMove(String hostname, String move) {
+		
 		movement_list.replace(hostname, move);
 		
 	}
@@ -150,8 +151,8 @@ public class Peer {
 	 * @param hostname Peer to update
 	 * @param is_ready False if it's not ready, True otherwise
 	 */
-	public void setPeerReady(String hostname, boolean is_ready) {
-		ready_list.replace(hostname, is_ready);
+	public synchronized void setPeerReady(String hostname) {
+		ready_list.replace(hostname, true);
 	}
 
 
@@ -174,6 +175,68 @@ public class Peer {
 			e.printStackTrace();
 		} 
 		
+	}
+
+
+	/**
+	 * Return the current score
+	 * @return int with the current score
+	 */
+	public synchronized int getScore() {
+		return score;
+	}
+
+
+	/**
+	 * Updates the Peer's score
+	 * @param score int to which update the score
+	 */
+	public  synchronized void setScore(int score) {
+		this.score = score;
+	}
+
+
+	/**
+	 * If all peers have made their move, return True
+	 * @return True if all peers made their move
+	 */
+	public boolean allPeersMoved() {
+		
+		
+		for(String otherHost: movement_list.keySet()){
+			if(movement_list.get(otherHost).equals(Move.NONE)){
+				return false;
+			}
+			
+		}
+		
+		return true;
+	}
+
+
+	/**
+	 * This method checks if all peers are ready
+	 * @return true if all peers are ready
+	 */
+	public boolean allPeersReady() {
+
+		for(String host: ready_list.keySet()){
+			if(ready_list.get(host)==false){
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * This method erases all relevant information of the previous game
+	 * To be called only when all peers are ready.
+	 */
+	public void createNewMatch(){
+		for(String peer: movement_list.keySet()){
+			movement_list.replace(peer, Move.NONE);
+		}
+		return;
 	}
 
 }

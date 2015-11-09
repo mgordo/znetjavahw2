@@ -15,16 +15,17 @@ import constants.*;
  * @author Miguel
  *
  */
-public class Actions implements Runnable {
+public class MessageParser implements Runnable {
 	
 	private Socket socket;
 	private Peer peer;
-
+	private PRSGame gameListening;
 	
 	
-	public Actions(Socket socket, Peer peer) {
+	public MessageParser(Socket socket, Peer peer,PRSGame game) {
 		this.peer=peer;
 		this.socket=socket;
+		this.gameListening = game;
 	}
 
 	
@@ -70,55 +71,39 @@ public class Actions implements Runnable {
 		//Message read stored in ArralyList msg
 		if(msg.get(0)==MessageTypes.SEND_MOVE){
 			//Params are hostname, move
-			peer.updateMove(msg.get(1),msg.get(2));
-			//TODO call main thread
+			
+			gameListening.moveMade(msg.get(1), msg.get(2));
 			
 		}else if(msg.get(0)==MessageTypes.READY){
-			peer.setPeerReady(msg.get(1),Boolean.valueOf(msg.get(2)));
-			//Inside this call the check for all players ready will be made
-			//TODO Review, will this be ready for a new match, if so call here main thread
-			
+			gameListening.peerIsReady(msg.get(1));
+					
 		}else if(msg.get(0)==MessageTypes.BYE){
-			peer.removePeer(msg.get(1));
-			//TODO Do we need to call the main thread with a bye? 
+			gameListening.removePeer(msg.get(1));
+			
 			
 		}else if(msg.get(0)==MessageTypes.HELLO){
 			//Hostname, IP, port
-			try {
-				peer.putNewPeer(msg.get(1), msg.get(2),Integer.valueOf((msg.get(3))));
-			} catch (NumberFormatException e) {
-				System.out.println("Error converting number");
-				e.printStackTrace();
-				return;
-			} catch (IOException e) {
-				System.out.println("Error creating socket for hello message");
-				e.printStackTrace();
-				return;
-			}
+			
+			gameListening.putNewPeer(msg.get(1), msg.get(2),Integer.valueOf((msg.get(3))));
+			
+			
 			
 			
 		}else if(msg.get(0)==MessageTypes.ACT_FAST){
-			//TODO Here call main thread to pop up a warning
 			
+			gameListening.actFast();
 			
 		}else if(msg.get(0)==MessageTypes.NEED_HOSTS){
-			
+			//No need to call main thread for sending hosts
 			peer.sendHosts(msg.get(1));
 			
 		}else if(msg.get(0)==MessageTypes.HOST){
-			try {
-				peer.putNewPeer(msg.get(1), msg.get(2), Integer.valueOf(msg.get(3)));
-			} catch (NumberFormatException e) {
-				System.out.println("Error converting number");
-				e.printStackTrace();
-				return;
-			} catch (IOException e) {
-				System.out.println("Error creating socket for hello message");
-				e.printStackTrace();
-				return;
-			}
+			
+			gameListening.addHost(msg.get(1), msg.get(2), Integer.valueOf(msg.get(3)));
 			
 		}else if(msg.get(0)==MessageTypes.ALIVE){
+			
+			gameListening.hostAlive(msg.get(1));
 			//TODO Here we should stop the timeout process for that peer and create a new one, or restart the timer			
 		}
 		
