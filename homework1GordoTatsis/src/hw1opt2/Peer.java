@@ -28,6 +28,16 @@ public class Peer {
 	private Listener listener_thread;
 	private String myhostname;
 	
+	/*public Peer(String hostname,int port){
+		this.myhostname=hostname;
+		socket_list = new ConcurrentHashMap<String,Socket>();
+		movement_list = new ConcurrentHashMap<String,String>();
+		ready_list = new ConcurrentHashMap<String,Boolean>();
+		peer_names = new ArrayList<String>();
+		listener_thread = new Listener(this,port);
+		listener_thread.start();
+	}*/
+	
 	/**
 	 * Constructor for Peer class. Starts Listener Thread
 	 * @param hostname Name of the Peer being instantiated
@@ -40,7 +50,7 @@ public class Peer {
 		ready_list = new ConcurrentHashMap<String,Boolean>();
 		peer_names = new ArrayList<String>();
 		listener_thread = new Listener(this,port,game);
-		listener_thread.run();
+		listener_thread.start();
 	}
 	
 		

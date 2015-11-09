@@ -9,13 +9,15 @@ import java.io.InputStreamReader;
 import java.io.StreamTokenizer;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
+
 import constants.*;
 
 /**
  * @author Miguel
  *
  */
-public class MessageParser implements Runnable {
+public class MessageParser extends Thread {
 	
 	private Socket socket;
 	private Peer peer;
@@ -35,79 +37,76 @@ public class MessageParser implements Runnable {
 	 */
 	@Override
 	public void run() {
-		StreamTokenizer rd=null;
-		ArrayList<String> msg = new ArrayList<String>();
+		
+		String str=null;
 		try {
-			rd = new StreamTokenizer ( new BufferedReader( new InputStreamReader( socket.getInputStream())));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		if(rd==null){
-			return;
-		}
-		int ret=StreamTokenizer.TT_EOF;
-		try {
-			ret = rd.nextToken();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		//This loop reads the message. Everything in the message should be Strings
-		while( ret != StreamTokenizer.TT_EOF && ret!=StreamTokenizer.TT_EOL){
+			BufferedReader buffrd = new BufferedReader( new InputStreamReader(socket.getInputStream()));
+			str = buffrd.readLine();
 			
-			if(ret==StreamTokenizer.TT_WORD || ret==StreamTokenizer.TT_NUMBER){
-				msg.add(rd.sval);//sval is a string no matter what
-			}
+		} catch (IOException e1) {
 			
-			
+			e1.printStackTrace();
+		}
+		if(str==null){
 			try {
-				ret=rd.nextToken();
+				socket.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+				
 				e.printStackTrace();
 			}
+			return;
 		}
+		String[] msg2 = str.split(" ");
+		ArrayList<String> msg = new ArrayList<String>(Arrays.asList(msg2));
+
 		//Message read stored in ArralyList msg
-		if(msg.get(0)==MessageTypes.SEND_MOVE){
-			//Params are hostname, move
+		if(msg.get(0).equals(MessageTypes.SEND_MOVE)){
+			//SEND_MOVE, hostname, Move
 			
 			gameListening.moveMade(msg.get(1), msg.get(2));
+
+		}else if(msg.get(0).equals(MessageTypes.READY)){
+			//READY hostname
 			
-		}else if(msg.get(0)==MessageTypes.READY){
 			gameListening.peerIsReady(msg.get(1));
 					
-		}else if(msg.get(0)==MessageTypes.BYE){
+		}else if(msg.get(0).equals(MessageTypes.BYE)){
+			//BYE hostname
+			
 			gameListening.removePeer(msg.get(1));
 			
-			
-		}else if(msg.get(0)==MessageTypes.HELLO){
-			//Hostname, IP, port
+		}else if(msg.get(0).equals(MessageTypes.HELLO)){
+			//HELLO Hostname, IP, port
 			
 			gameListening.putNewPeer(msg.get(1), msg.get(2),Integer.valueOf((msg.get(3))));
-			
-			
-			
-			
-		}else if(msg.get(0)==MessageTypes.ACT_FAST){
+
+		}else if(msg.get(0).equals(MessageTypes.ACT_FAST)){
+			//ACT_FAST
 			
 			gameListening.actFast();
 			
-		}else if(msg.get(0)==MessageTypes.NEED_HOSTS){
+		}else if(msg.get(0).equals(MessageTypes.NEED_HOSTS)){
+			//NEED_HOSTS hostname
 			//No need to call main thread for sending hosts
 			peer.sendHosts(msg.get(1));
-			
-		}else if(msg.get(0)==MessageTypes.HOST){
+
+		}else if(msg.get(0).equals(MessageTypes.HOST)){
+			//HOST hostname ip port
 			
 			gameListening.addHost(msg.get(1), msg.get(2), Integer.valueOf(msg.get(3)));
 			
-		}else if(msg.get(0)==MessageTypes.ALIVE){
+		}else if(msg.get(0).equals(MessageTypes.ALIVE)){
+			//ALIVE hostname
 			
 			gameListening.hostAlive(msg.get(1));
 			//TODO Here we should stop the timeout process for that peer and create a new one, or restart the timer			
 		}
-		
-		
+		try {
+			socket.close();
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+		}
 	}
 
 }

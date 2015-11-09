@@ -77,9 +77,12 @@ public class PRSGame extends JPanel{
 		Broadcast.init();
 	}
 	
+	
+	
 	/**
 	 * PRSGame constructor, initialises the GUI 
 	 */
+	
 	private PRSGame(){
 		createInitPanel();
 		createJoinPanel();
