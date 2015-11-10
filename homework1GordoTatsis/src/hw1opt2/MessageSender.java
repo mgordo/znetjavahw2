@@ -73,6 +73,7 @@ public class MessageSender {
 			this.port = port;
 		}
 		public void run() {
+			
 			sendMessage(new Message(), to, ip, port);//TODO: keep alive message
 			futureHeartbeats.put(to, heartbeatScheduler.schedule(new HeartBeatRunnable(to, ip, port), heartbeatDelay, TimeUnit.MILLISECONDS));
 		}

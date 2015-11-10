@@ -592,4 +592,9 @@ public class PRSGame extends JPanel{
 		}
 	}
 
+	public void arrivedInfo(int state, HashMap<String, Integer> scores) {
+		//TODO what to do if info arrives
+		
+	}
+
 }

@@ -27,6 +27,7 @@ public class Peer {
 	private int score;
 	private Listener listener_thread;
 	private String myhostname;
+	private ConcurrentHashMap<String,Integer> score_list;
 	
 	/*public Peer(String hostname,int port){
 		this.myhostname=hostname;
@@ -48,6 +49,7 @@ public class Peer {
 		address_list = new ConcurrentHashMap<String,String>();
 		movement_list = new ConcurrentHashMap<String,String>();
 		ready_list = new ConcurrentHashMap<String,Boolean>();
+		score_list = new ConcurrentHashMap<String,Integer>();
 		peer_names = new ArrayList<String>();
 		listener_thread = new Listener(this,port,game);
 		listener_thread.start();
@@ -71,10 +73,10 @@ public class Peer {
 	 * @throws IOException
 	 */
 	public synchronized void putNewPeer(String hostname, String ip, int port) throws IOException {
-		InetAddress ip_dest = InetAddress.getByName(ip);
 		this.address_list.put(hostname, ip+" "+Integer.toString(port));
 		this.peer_names.add(hostname);
 		this.movement_list.put(hostname, Move.NONE);
+		score_list.put(hostname, 0);
 		ready_list.put(hostname, false);//TODO a new peer is by default not ready
 	}
 
@@ -246,6 +248,16 @@ public class Peer {
 			movement_list.replace(peer, Move.NONE);
 		}
 		return;
+	}
+
+
+	public ConcurrentHashMap<String,Integer> getScore_list() {
+		return score_list;
+	}
+
+
+	public void setScore_list(String peer, int score) {
+		score_list.replace(peer, score);
 	}
 
 }

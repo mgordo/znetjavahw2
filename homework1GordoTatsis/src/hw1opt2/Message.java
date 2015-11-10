@@ -88,11 +88,11 @@ public class Message {
 	
 	/**
 	 * 
-	 * @param state
-	 * @param score A string with hostname + 
+	 * @param state State of the game
+	 * @param score A string with hostname + score for every hostname in the game, all in one string
 	 */
-	public void sendInfo(State state, String score){
-		message = MessageTypes.INFO+" "+state;
+	public void makeInfo(State state, String score){
+		message = MessageTypes.INFO+" "+state+" "+score;
 	}
 	
 	/**
