@@ -352,16 +352,19 @@ public class PRSGame extends JPanel{
 	}
 
 	public void putNewPeer(String hostname, String ip, int port) {
-		try {
-			myPeer.putNewPeer(hostname, ip,port);
-		} catch (NumberFormatException e) {
-			System.out.println("Error converting number");
-			e.printStackTrace();
-			return;
-		} catch (IOException e) {
-			System.out.println("Error creating socket for hello message");
-			e.printStackTrace();
-			return;
+		if(myPeer.getMyhostname().equals(hostname)==false){
+
+			try {
+				myPeer.putNewPeer(hostname, ip,port);
+			} catch (NumberFormatException e) {
+				System.out.println("Error converting number");
+				e.printStackTrace();
+				return;
+			} catch (IOException e) {
+				System.out.println("Error creating socket for hello message");
+				e.printStackTrace();
+				return;
+			}
 		}
 		//TODO probably redraw although it may depend on which game state we are at
 		

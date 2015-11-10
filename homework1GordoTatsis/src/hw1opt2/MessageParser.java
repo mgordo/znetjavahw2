@@ -88,7 +88,7 @@ public class MessageParser extends Thread {
 		}else if(msg.get(0).equals(MessageTypes.NEED_HOSTS)){
 			//NEED_HOSTS hostname
 			//No need to call main thread for sending hosts
-			peer.sendHosts(msg.get(1));
+			//peer.sendHosts(msg.get(1));//TODO get the list of peers and send in a loop messages through MessageSender
 
 		}else if(msg.get(0).equals(MessageTypes.HOST)){
 			//HOST hostname ip port

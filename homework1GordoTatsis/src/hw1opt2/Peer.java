@@ -20,7 +20,7 @@ import java.net.*;
 public class Peer {
 	
 	private State state=State.NOT_CONNECTED;
-	private ConcurrentHashMap<String,Socket> socket_list;
+	private ConcurrentHashMap<String,String> address_list;//ip port is the format for the address
 	private ConcurrentHashMap<String,String> movement_list;
 	private ConcurrentHashMap<String,Boolean> ready_list;
 	private ArrayList<String> peer_names;
@@ -45,7 +45,7 @@ public class Peer {
 	 */
 	public Peer(String hostname,int port,PRSGame game){
 		this.myhostname=hostname;
-		socket_list = new ConcurrentHashMap<String,Socket>();
+		address_list = new ConcurrentHashMap<String,String>();
 		movement_list = new ConcurrentHashMap<String,String>();
 		ready_list = new ConcurrentHashMap<String,Boolean>();
 		peer_names = new ArrayList<String>();
@@ -58,8 +58,8 @@ public class Peer {
 	 * Gets the HashMap that connects the hostname of another peer with their listening address
 	 * @return Concurrent HashMap with peer's hostnames as keys and Sockets as value
 	 */
-	public ConcurrentHashMap<String,Socket> getSocket_list() {
-		return socket_list;
+	public ConcurrentHashMap<String,String> getSocket_list() {
+		return address_list;
 	}
 
 	
@@ -72,8 +72,7 @@ public class Peer {
 	 */
 	public synchronized void putNewPeer(String hostname, String ip, int port) throws IOException {
 		InetAddress ip_dest = InetAddress.getByName(ip);
-		Socket socket = new Socket(ip_dest,port);
-		this.socket_list.put(hostname, socket);
+		this.address_list.put(hostname, ip+" "+Integer.toString(port));
 		this.peer_names.add(hostname);
 		this.movement_list.put(hostname, Move.NONE);
 		ready_list.put(hostname, false);//TODO a new peer is by default not ready
@@ -96,7 +95,7 @@ public class Peer {
 	 */
 	public synchronized void removePeer(String hostname){
 		this.movement_list.remove(hostname);
-		this.socket_list.remove(hostname);
+		this.address_list.remove(hostname);
 		this.peer_names.remove(peer_names.indexOf(hostname));
 		ready_list.remove(hostname);
 	}
@@ -170,12 +169,12 @@ public class Peer {
 	 * Send all hosts with their sockets to hostname
 	 * @param hostname Hostname to whom to send the peer list;
 	 */
-	public void sendHosts(String hostname) {
-		Socket socket = this.socket_list.get(hostname);
+	/*public void sendHosts(String hostname) {
+		Socket socket = this.address_list.get(hostname);
 		try {
 			PrintWriter wr = new PrintWriter(socket.getOutputStream());
 			for(String peer: peer_names){
-				Socket socket_to_be_sent = socket_list.get(peer);
+				Socket socket_to_be_sent = address_list.get(peer);
 				wr.write(MessageTypes.HOST+" "+peer+" "+socket_to_be_sent.getInetAddress().toString()+" "+Integer.toString(socket_to_be_sent.getPort()));
 				wr.flush();
 			}
@@ -185,7 +184,7 @@ public class Peer {
 			e.printStackTrace();
 		} 
 		
-	}
+	}*/
 
 
 	/**
