@@ -480,6 +480,7 @@ public class PRSGame extends JPanel{
 				PeerInfo.addPeer(peersPanel, name, 0, false);
 		    }
 	    });
+		//TODO if game is running, send him the move inmediately if we have already made it
 	}
 
 	public void actFast() {

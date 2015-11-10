@@ -58,7 +58,7 @@ public class Peer {
 	 * Gets the HashMap that connects the hostname of another peer with their listening address
 	 * @return Concurrent HashMap with peer's hostnames as keys and Sockets as value
 	 */
-	public ConcurrentHashMap<String,String> getSocket_list() {
+	public ConcurrentHashMap<String,String> getAddress_list() {
 		return address_list;
 	}
 

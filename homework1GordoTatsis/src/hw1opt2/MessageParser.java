@@ -88,7 +88,14 @@ public class MessageParser extends Thread {
 		}else if(msg.get(0).equals(MessageTypes.NEED_HOSTS)){
 			//NEED_HOSTS hostname
 			//No need to call main thread for sending hosts
-			//peer.sendHosts(msg.get(1));//TODO get the list of peers and send in a loop messages through MessageSender
+			for(String itpeer: peer.getAddress_list().keySet()){
+				Message hostmsg= new Message(peer.getMyhostname());
+				String address = peer.getAddress_list().get(itpeer);
+				String[] address_parts = address.split(" ");
+				hostmsg.makeHostMessage(itpeer, address_parts[0], Integer.parseInt(address_parts[1]));
+				//TODO Send message through MessageSender		
+			}
+			
 
 		}else if(msg.get(0).equals(MessageTypes.HOST)){
 			//HOST hostname ip port
@@ -99,6 +106,11 @@ public class MessageParser extends Thread {
 			//ALIVE hostname
 			
 			gameListening.hostAlive(msg.get(1));
+			//TODO Here we should stop the timeout process for that peer and create a new one, or restart the timer			
+		}else if(msg.get(0).equals(MessageTypes.NEED_INFO)){
+			//NEED_INFO hostname
+			
+			
 			//TODO Here we should stop the timeout process for that peer and create a new one, or restart the timer			
 		}
 		try {
