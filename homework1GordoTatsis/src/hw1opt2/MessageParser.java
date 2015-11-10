@@ -92,12 +92,24 @@ public class MessageParser extends Thread {
 		}else if(msg.get(0).equals(MessageTypes.NEED_HOSTS)){
 			//NEED_HOSTS hostname
 			//No need to call main thread for sending hosts
+			String destination = peer.getAddress_list().get(msg.get(1));
+			String[] destination_parts = destination.split(" ");
 			for(String itpeer: peer.getAddress_list().keySet()){
 				Message hostmsg= new Message(peer.getMyhostname());
 				String address = peer.getAddress_list().get(itpeer);
 				String[] address_parts = address.split(" ");
 				hostmsg.makeHostMessage(itpeer, address_parts[0], Integer.parseInt(address_parts[1]));
-				//TODO Send message through MessageSender		
+				
+				
+				try {
+					MessageSender.sendMessage(hostmsg, msg.get(1), InetAddress.getByName(destination_parts[0]), Integer.parseInt(destination_parts[1]));
+				} catch (NumberFormatException e) {
+					System.out.println("Error parsing port while sending host");
+					e.printStackTrace();
+				} catch (UnknownHostException e) {
+					System.out.println("Error while sending host");
+					e.printStackTrace();
+				}		
 			}
 			
 
@@ -110,7 +122,7 @@ public class MessageParser extends Thread {
 			//ALIVE hostname
 			
 			gameListening.hostAlive(msg.get(1));
-			//TODO Here we should stop the timeout process for that peer and create a new one, or restart the timer			
+						
 		}else if(msg.get(0).equals(MessageTypes.NEED_INFO)){
 			//NEED_INFO hostname
 			String score=peer.getMyhostname()+" "+Integer.toString(peer.getScore());
@@ -137,10 +149,10 @@ public class MessageParser extends Thread {
 				for(int i=3;i<msg.size();i+=2){
 					scores.put(msg.get(i-1), Integer.parseInt(msg.get(i)));
 				}
-				gameListening.arrivedInfo(state, scores);
+				gameListening.arrivedInfo(constants.State.values()[state], scores);
 		
 			
-			//TODO Here we should stop the timeout process for that peer and create a new one, or restart the timer			
+					
 		}
 		try {
 			socket.close();

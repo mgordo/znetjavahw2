@@ -256,7 +256,7 @@ public class Peer {
 	}
 
 
-	public void setScore_list(String peer, int score) {
+	public void setScoreOfPeer(String peer, int score) {
 		score_list.replace(peer, score);
 	}
 

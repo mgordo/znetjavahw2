@@ -27,7 +27,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.NumberFormatter;
 
-import constants.Move;
+import constants.*;
 import hw1opt2.Broadcast.GameInfo;
 
 public class PRSGame extends JPanel{
@@ -592,8 +592,12 @@ public class PRSGame extends JPanel{
 		}
 	}
 
-	public void arrivedInfo(int state, HashMap<String, Integer> scores) {
-		//TODO what to do if info arrives
+	public void arrivedInfo(constants.State state, HashMap<String, Integer> scores) {
+		for(String otherpeer: scores.keySet()){
+			myPeer.setScoreOfPeer(otherpeer, scores.get(otherpeer));
+		}
+		myPeer.setState(state);
+		//TODO need to redraw after info recieved?
 		
 	}
 
