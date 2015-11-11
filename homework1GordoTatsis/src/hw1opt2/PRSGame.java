@@ -512,6 +512,14 @@ public class PRSGame extends JPanel{
 		
 	}
 	
+	public void arrivedInfo(constants.State state, HashMap<String, Integer> scores) {
+		for(String otherpeer: scores.keySet()){
+			myPeer.setScoreOfPeer(otherpeer, scores.get(otherpeer));
+		}
+		myPeer.setState(state);
+		//TODO need to redraw after info recieved?
+		
+	}
 	
 	/**
 	 * Switches visibility to another panel
@@ -545,6 +553,13 @@ public class PRSGame extends JPanel{
 	 */
 	public static PRSGame getInstance(){
 		return instance;	
+	}
+	
+	/**
+	 * Returns the current instance of the Peer Class
+	 */
+	public Peer getPeerObject(){
+		return myPeer;	
 	}
 	
 	/**
@@ -592,13 +607,6 @@ public class PRSGame extends JPanel{
 		}
 	}
 
-	public void arrivedInfo(constants.State state, HashMap<String, Integer> scores) {
-		for(String otherpeer: scores.keySet()){
-			myPeer.setScoreOfPeer(otherpeer, scores.get(otherpeer));
-		}
-		myPeer.setState(state);
-		//TODO need to redraw after info recieved?
-		
-	}
+	
 
 }
