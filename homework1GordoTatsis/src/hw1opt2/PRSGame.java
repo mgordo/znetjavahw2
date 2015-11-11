@@ -480,7 +480,13 @@ public class PRSGame extends JPanel{
 				PeerInfo.addPeer(peersPanel, name, 0, false);
 		    }
 	    });
-		//TODO if game is running, send him the move inmediately if we have already made it
+		//If we have moved, we send this new peer our own move inmediately
+		if(myPeer.getState().equals(State.PLAYING_MOVEMADE)){
+			Message movemsg = new Message(myPeer.getMyhostname());
+			movemsg.makeSendMoveMessage(myPeer.getMyMove());
+			MessageSender.sendMessage(movemsg, name, myPeer.getAddress_list().get(name));
+		}
+		
 	}
 
 	public void actFast() {

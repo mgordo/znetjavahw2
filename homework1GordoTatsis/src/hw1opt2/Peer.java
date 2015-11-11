@@ -28,7 +28,7 @@ public class Peer {
 	private Listener listener_thread;
 	private String myhostname;
 	private ConcurrentHashMap<String,Integer> score_list;
-	
+	private String myMove;
 	/*public Peer(String hostname,int port){
 		this.myhostname=hostname;
 		socket_list = new ConcurrentHashMap<String,Socket>();
@@ -53,6 +53,7 @@ public class Peer {
 		peer_names = new ArrayList<String>();
 		listener_thread = new Listener(this,port,game);
 		listener_thread.start();
+		setMyMove(Move.NONE);
 	}
 	
 		
@@ -258,6 +259,20 @@ public class Peer {
 
 	public void setScoreOfPeer(String peer, int score) {
 		score_list.replace(peer, score);
+	}
+
+
+	public String getMyMove() {
+		return myMove;
+	}
+
+	/**
+	 * Attention: This method does not change the state of the game after a move is set
+	 * @param myMove New Move to be set
+	 */
+	public void setMyMove(String myMove) {
+		this.myMove = myMove;
+		
 	}
 
 }
