@@ -74,22 +74,6 @@ public class MessageSender {
 			return;
 		futureBeat = heartbeatScheduler.schedule(new HeartBeatRunnable(to, ip, port), heartbeatDelay, TimeUnit.MILLISECONDS);
 		futureHeartbeats.put(to, futureBeat);
-	private static class HeartBeatRunnable implements Runnable {
-		private final String to;
-		private final InetAddress ip;
-		private final int port;
-
-		public HeartBeatRunnable (final String to, final InetAddress ip, final int port){
-			this.to = to;
-			this.ip = ip;
-			this.port = port;
-		}
-		public void run() {
-			Message m = new Message(PRSGame.getInstance().getName());
-			m.makeAliveMessage();
-			sendMessage(m, to, ip, port);//TODO: keep alive message
-			futureHeartbeats.put(to, heartbeatScheduler.schedule(new HeartBeatRunnable(to, ip, port), heartbeatDelay, TimeUnit.MILLISECONDS));
-		}
 	}
 	
 	public static void stopHeartbeat(final String to){
@@ -113,7 +97,7 @@ public class MessageSender {
 			
 			Message m = new Message(PRSGame.getInstance().getName());
 			m.makeAliveMessage();
-			sendMessage(m, to, ip, port);//TODO: keep alive message
+			sendMessage(m, to, ip, port);
 			futureHeartbeats.put(to, heartbeatScheduler.schedule(new HeartBeatRunnable(to, ip, port), heartbeatDelay, TimeUnit.MILLISECONDS));
 		}
 	}
