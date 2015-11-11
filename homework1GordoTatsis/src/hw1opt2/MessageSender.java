@@ -91,6 +91,7 @@ public class MessageSender {
 			futureHeartbeats.put(to, heartbeatScheduler.schedule(new HeartBeatRunnable(to, ip, port), heartbeatDelay, TimeUnit.MILLISECONDS));
 		}
 	}
+	}
 	
 	public static void stopHeartbeat(final String to){
 		ScheduledFuture<?> futureBeat = futureHeartbeats.get(to);
