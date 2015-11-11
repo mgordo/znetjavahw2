@@ -80,9 +80,9 @@ public class MessageParser extends Thread {
 			gameListening.removePeer(msg.get(1));
 			
 		}else if(msg.get(0).equals(MessageTypes.HELLO)){
-			//HELLO Hostname, IP, port
+			//HELLO Hostname
 			
-			gameListening.putNewPeer(msg.get(1), msg.get(2),Integer.valueOf((msg.get(3))));
+			gameListening.putNewPeer(msg.get(1), socket.getInetAddress().toString(),socket.getPort());
 
 		}else if(msg.get(0).equals(MessageTypes.ACT_FAST)){
 			//ACT_FAST

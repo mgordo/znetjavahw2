@@ -61,8 +61,8 @@ public class Message {
 	 * @param ip Own ip address in string format
 	 * @param port port in which the p2p application will listen
 	 */
-	public void makeHelloMessage(String ip, int port){
-		message = MessageTypes.HELLO+" "+myhostname+" "+ip+" "+Integer.toString(port);
+	public void makeHelloMessage(){
+		message = MessageTypes.HELLO+" "+myhostname;
 	}
 	
 	/**
