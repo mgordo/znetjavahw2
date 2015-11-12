@@ -3,7 +3,7 @@ import java.io.IOException;
 import java.net.*;
 public class Listener extends Thread {
 	
-	private Peer peer;
+
 	InetAddress localIP;
 	private int myport;
 	private ServerSocket serversocket;
@@ -29,8 +29,8 @@ public class Listener extends Thread {
 	}*/
 	
 	
-	public Listener(Peer peer, int port, PRSGame game){
-		this.peer=peer;
+	public Listener(int port, PRSGame game){
+		
 		gameListening = game;
 		try {
 			localIP = InetAddress.getLocalHost();
@@ -57,7 +57,7 @@ public class Listener extends Thread {
 			Socket socket=null;
 			try {
 				socket = serversocket.accept();
-				MessageParser newaction = new MessageParser(socket, peer, gameListening);
+				MessageParser newaction = new MessageParser(socket, gameListening);
 				newaction.setPriority(newaction.getPriority()+1);
 				newaction.start();
 			} catch (IOException e) {

@@ -79,6 +79,8 @@ public class PRSGame extends JPanel{
     private volatile String move = null;
     
     private ConcurrentHashMap<String, PeerInformation> peerMap = new ConcurrentHashMap<String, PeerInformation>();
+
+	private Listener listener;
     
     private static DefaultFormatterFactory portFormatterFactory;
     static{
@@ -124,9 +126,12 @@ public class PRSGame extends JPanel{
 			public void actionPerformed(ActionEvent e) {
 				if (!checkInitFields())
 					return;
-				myPeer = new Peer(playerName, portTCP, instance);
+				//myPeer = new Peer(playerName, portTCP, instance);
+				
 				portTCP = Integer.parseInt(portTextField.getText());
 				playerName = nameTextField.getText();
+				listener = new Listener(portTCP, instance);
+				listener.start();
 				switchPanel(joinPanel);
 			}
 		});
@@ -136,11 +141,13 @@ public class PRSGame extends JPanel{
 			public void actionPerformed(ActionEvent e) {
 				if (!checkInitFields())
 					return;
-				myPeer = new Peer(playerName, portTCP, instance);
+				//myPeer = new Peer(playerName, portTCP, instance);
 				portTCP = Integer.parseInt(portTextField.getText());
 				playerName = nameTextField.getText();
 				Broadcast.setBroadcasting(true);
 				peerMap.put(playerName, new PeerInformation(0, null, portTCP, true, Move.NONE));
+				listener = new Listener(portTCP, instance);
+				listener.start();
 				switchPanel(gamePanel);
 			}
 		});
@@ -302,7 +309,7 @@ public class PRSGame extends JPanel{
 			nextButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Message m = Message.makeReadyMessage(playerName);
+					Message m = Message.makeReadyMessage(playerName);//TODO look at ready message
 					MessageSender.sendMessageToAllPeers(m);
 					ready = true;
 					gamePanel.remove(nextButton);

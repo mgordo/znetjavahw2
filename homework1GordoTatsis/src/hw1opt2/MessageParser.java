@@ -25,12 +25,10 @@ import constants.*;
 public class MessageParser extends Thread {
 	
 	private Socket socket;
-	private Peer peer;
 	private PRSGame gameListening;
 	
 	
-	public MessageParser(Socket socket, Peer peer,PRSGame game) {
-		this.peer=peer;
+	public MessageParser(Socket socket,PRSGame game) {
 		this.socket=socket;
 		this.gameListening = game;
 	}
