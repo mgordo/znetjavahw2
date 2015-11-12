@@ -73,6 +73,7 @@ public class PRSGame extends JPanel{
     private final JButton nextButton = new JButton("Next Round");
 
     private volatile boolean ready = false;
+    private volatile boolean actFastReceived = false;
     private volatile String move = null;
     
     private static DefaultFormatterFactory portFormatterFactory;
@@ -119,7 +120,7 @@ public class PRSGame extends JPanel{
 			public void actionPerformed(ActionEvent e) {
 				if (!checkInitFields())
 					return;
-				//TODO: start TCP Listener
+				myPeer = new Peer(playerName, portTCP, instance);
 				portTCP = Integer.parseInt(portTextField.getText());
 				playerName = nameTextField.getText();
 				switchPanel(joinPanel);
@@ -131,7 +132,7 @@ public class PRSGame extends JPanel{
 			public void actionPerformed(ActionEvent e) {
 				if (!checkInitFields())
 					return;
-				//TODO: start TCP Listener
+				myPeer = new Peer(playerName, portTCP, instance);
 				portTCP = Integer.parseInt(portTextField.getText());
 				playerName = nameTextField.getText();
 				Broadcast.setBroadcasting(true);
@@ -186,8 +187,9 @@ public class PRSGame extends JPanel{
 			public void actionPerformed(ActionEvent e) {
 				if (!checkJoinFields())
 					return;
-				//TODO: connect to game
-				switchPanel(gamePanel);
+				Message m = new Message(playerName);
+				m.makeHelloMessage(portTCP);//TODO: address instead of null?
+				MessageSender.sendMessage(m, null, remoteIpTextField.getText()+" "+remotePortTextField.getText());
 			}
 		});
 		
@@ -244,7 +246,7 @@ public class PRSGame extends JPanel{
 		availableGamesPanel.removeAll();
 		availableGamesPanel.add(availableGamesInfoLabel);
 		availableGamesPanel.add(refreshButton);
-		for (GameInfo info : Broadcast.getGames()){
+		for (final GameInfo info : Broadcast.getGames()){
 			if (info.name.equals(playerName))
 				continue;
 		    JLabel gameNameLabel = new JLabel(info.name);
@@ -253,9 +255,9 @@ public class PRSGame extends JPanel{
 		    connectButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					//TODO: connect to game
-					switchPanel(gamePanel);
-					initPeerPanel();
+					Message m = new Message(playerName);
+					m.makeHelloMessage(portTCP);//TODO: address instead of null?
+					MessageSender.sendMessage(m, null, info.address, info.port);
 				}
 			});
 
@@ -297,14 +299,17 @@ public class PRSGame extends JPanel{
 			nextButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					//TODO: send that we are ready
+					Message m = new Message(playerName);
+					m.makeReadyMessage();
+					MessageSender.sendMessageToAllPeers(m);
 					ready = true;
 					gamePanel.remove(nextButton);
 					revalidate();
 				}
 			});
 		}
-
+		
+		actFastReceived = false;
 		ready = false;
 		move = null;
 		
@@ -330,7 +335,7 @@ public class PRSGame extends JPanel{
 			gamePanel.add(movePanel);
 			gamePanel.add(peersPanel);
 			
-			initPeerPanel();
+			//initPeerPanel();
 		}
 		
 			    
@@ -340,20 +345,20 @@ public class PRSGame extends JPanel{
 	 * Initialises the Peer panel with the values contained in the Peer instance
 	 */
 	private void initPeerPanel(){
-		final Map<String,Boolean> readyStates = myPeer.getReady_list();
-		final Map<String,Integer> scoreMap = null; //TODO: get score information from other peers
+		final Map<String,Boolean> readyMap = myPeer.getReady_list();
+		final Map<String,Integer> scoreMap = myPeer.getScore_list();
 		
-		List<String> peers = new ArrayList<String>(readyStates.keySet());
+		List<String> peers = new ArrayList<String>(readyMap.keySet());
 		Collections.sort(peers, new Comparator<String>() {
 			public int compare(String left, String right) {
 				return scoreMap.get(right)-(scoreMap.get(left));
 			}
 		});
 		
-		PeerInfo.clear(peersPanel);
+		PeerPanelControl.clear(peersPanel);
 		
 		for (String peer : peers)
-		    PeerInfo.addPeer(peersPanel, peer, scoreMap.get(peer), readyStates.get(peer));
+		    PeerPanelControl.addPeer(peersPanel, peer, scoreMap.get(peer), readyMap.get(peer));
 
 		revalidate();
 		frame.pack();
@@ -385,14 +390,14 @@ public class PRSGame extends JPanel{
 		add(moveLabel);
 		revalidate();
 		frame.pack();
-		
-		//TODO: send move to peers
+		Message m = new Message(playerName);
+		m.makeSendMoveMessage(move);
+		MessageSender.sendMessageToAllPeers(m);
 	}
 	
 
 	
 	private void finishGame() {
-		// TODO Method to be called when a game ends
 		
 	}
 	
@@ -416,7 +421,7 @@ public class PRSGame extends JPanel{
 		else{
 			SwingUtilities.invokeLater(new Runnable() {
 			    public void run() {
-			    	PeerInfo.setPeerReady(peersPanel, name, true);
+			    	PeerPanelControl.setPeerReady(peersPanel, name, true);
 					revalidate();
 			    }
 		    });
@@ -434,7 +439,7 @@ public class PRSGame extends JPanel{
 		else{
 			SwingUtilities.invokeLater(new Runnable() {
 			    public void run() {
-			    	PeerInfo.setPeerReady(peersPanel, name, true);
+			    	PeerPanelControl.setPeerReady(peersPanel, name, true);
 					revalidate();
 			    }
 		    });
@@ -443,11 +448,13 @@ public class PRSGame extends JPanel{
 	
 	
 	public void removePeer(final String name) {
+		if (name == null)
+			return;
 		myPeer.removePeer(name);
 		if(myPeer.allPeersMoved() && move != null){
 			SwingUtilities.invokeLater(new Runnable() {
 			    public void run() {
-					PeerInfo.removePeer(peersPanel, name);
+					PeerPanelControl.removePeer(peersPanel, name);
 					finishGame();
 			    }
 		    });
@@ -455,17 +462,16 @@ public class PRSGame extends JPanel{
 		else{
 			SwingUtilities.invokeLater(new Runnable() {
 			    public void run() {
-					PeerInfo.removePeer(peersPanel, name);
+					PeerPanelControl.removePeer(peersPanel, name);
 			    }
 		    });
 		}
 		
 	}
 
-	public void putNewPeer(final String name, String ip, int port) {
+	public void putNewPeer(final String name, final String ip, final int port) {
 		try {
 			myPeer.putNewPeer(name, ip, port);
-			//TODO: send our move to the peer if moved
 		} catch (NumberFormatException e) {
 			System.out.println("Error converting number");
 			e.printStackTrace();
@@ -477,29 +483,29 @@ public class PRSGame extends JPanel{
 		}
 		SwingUtilities.invokeLater(new Runnable() {
 		    public void run() {
-				PeerInfo.addPeer(peersPanel, name, 0, false);
+				PeerPanelControl.addPeer(peersPanel, name, 0, false);
+				if (move != null){
+					Message m = new Message(playerName);
+					m.makeSendMoveMessage(move);
+					MessageSender.sendMessage(m, name, ip+" "+port);
+				}
 		    }
 	    });
-		//If we have moved, we send this new peer our own move inmediately
-		if(myPeer.getState().equals(State.PLAYING_MOVEMADE)){
-			Message movemsg = new Message(myPeer.getMyhostname());
-			movemsg.makeSendMoveMessage(myPeer.getMyMove());
-			MessageSender.sendMessage(movemsg, name, myPeer.getAddress_list().get(name));
-		}
-		
 	}
 
 	public void actFast() {
-		SwingUtilities.invokeLater(new Runnable() {
-		    public void run() {
-				JOptionPane.showMessageDialog(frame, "Please pick a move, the other players are waiting.", "Hey you!", JOptionPane.INFORMATION_MESSAGE);
-		    }
-	    });
+		if (move == null && !actFastReceived){
+    		actFastReceived = true;
+			SwingUtilities.invokeLater(new Runnable() {
+			    public void run() {
+		    		JOptionPane.showMessageDialog(frame, "Please pick a move, the other players are waiting.", "Hey you!", JOptionPane.INFORMATION_MESSAGE);
+		    	}
+		    });
+		}
 	}
 
 	public void hostAlive(String hostname) {
-		// TODO hostname is alive, so restart it timer
-		
+		// TODO: Nothing!
 	}
 
 	public void addHost(String name, String ip, int port) {
@@ -523,8 +529,12 @@ public class PRSGame extends JPanel{
 			myPeer.setScoreOfPeer(otherpeer, scores.get(otherpeer));
 		}
 		myPeer.setState(state);
-		//TODO need to redraw after info recieved?
-		
+		SwingUtilities.invokeLater(new Runnable() {
+		    public void run() {
+				initPeerPanel();
+				switchPanel(gamePanel);
+		    }
+	    });
 	}
 	
 	/**
@@ -571,20 +581,20 @@ public class PRSGame extends JPanel{
 	/**
 	 * Custom class to hold information about the peersPanel in gamePanel, and allow fast changes
 	 */
-	private static class PeerInfo{
-		private static Map<String,PeerInfo> peers = new HashMap<String,PeerInfo>();
+	private static class PeerPanelControl{
+		private static Map<String,PeerPanelControl> peers = new HashMap<String,PeerPanelControl>();
 		private JLabel peerNameLabel;
 		private JLabel peerScoreLabel;
 		private JLabel peerReadyLabel;
 		
-		private PeerInfo(JPanel panel, String name, int score, boolean ready){
+		private PeerPanelControl(JPanel panel, String name, int score, boolean ready){
 		    peerNameLabel = new JLabel(name);
 		    peerScoreLabel = new JLabel(Integer.toString(score));
 		    peerReadyLabel = new JLabel(ready?"Ready":"Not Ready");
 		}
 		
 		public static void addPeer(JPanel panel, String name, int score, boolean ready){
-			PeerInfo peerInfo = new PeerInfo(panel, name, score, ready);
+			PeerPanelControl peerInfo = new PeerPanelControl(panel, name, score, ready);
 			
 		    panel.add(peerInfo.peerNameLabel);
 		    panel.add(peerInfo.peerScoreLabel);
@@ -598,7 +608,7 @@ public class PRSGame extends JPanel{
 		}
 		
 		public static void removePeer(JPanel panel, String name){
-			PeerInfo peerInfo = peers.get(name);
+			PeerPanelControl peerInfo = peers.get(name);
 					
 			panel.remove(peerInfo.peerNameLabel);
 		    panel.remove(peerInfo.peerScoreLabel);
