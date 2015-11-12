@@ -78,7 +78,7 @@ public class PRSGame extends JPanel{
     private volatile boolean actFastReceived = false;
     private volatile String move = null;
     
-    private ConcurrentHashMap<String, PeerInformation> peerMap;
+    private ConcurrentHashMap<String, PeerInformation> peerMap = new ConcurrentHashMap<String, PeerInformation>();
     
     private static DefaultFormatterFactory portFormatterFactory;
     static{
@@ -140,6 +140,7 @@ public class PRSGame extends JPanel{
 				portTCP = Integer.parseInt(portTextField.getText());
 				playerName = nameTextField.getText();
 				Broadcast.setBroadcasting(true);
+				peerMap.put(playerName, new PeerInformation(0, null, portTCP, true, Move.NONE));
 				switchPanel(gamePanel);
 			}
 		});
@@ -191,8 +192,7 @@ public class PRSGame extends JPanel{
 			public void actionPerformed(ActionEvent e) {
 				if (!checkJoinFields())
 					return;
-				Message m = new Message(playerName);
-				m.makeHelloMessage(portTCP);//TODO: address instead of null?
+				Message m = Message.makeHelloMessage(playerName, portTCP);
 				MessageSender.sendMessage(m, null, remoteIpTextField.getText()+" "+remotePortTextField.getText());
 			}
 		});
@@ -259,8 +259,7 @@ public class PRSGame extends JPanel{
 		    connectButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Message m = new Message(playerName);
-					m.makeHelloMessage(portTCP);//TODO: address instead of null?
+					Message m = Message.makeHelloMessage(playerName, portTCP);
 					MessageSender.sendMessage(m, null, info.address, info.port);
 				}
 			});
@@ -303,8 +302,7 @@ public class PRSGame extends JPanel{
 			nextButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Message m = new Message(playerName);
-					m.makeReadyMessage();
+					Message m = Message.makeReadyMessage(playerName);
 					MessageSender.sendMessageToAllPeers(m);
 					ready = true;
 					gamePanel.remove(nextButton);
@@ -394,8 +392,7 @@ public class PRSGame extends JPanel{
 		add(moveLabel);
 		revalidate();
 		frame.pack();
-		Message m = new Message(playerName);
-		m.makeSendMoveMessage(move);
+		Message m = Message.makeSendMoveMessage(playerName, move);
 		MessageSender.sendMessageToAllPeers(m);
 	}
 	
@@ -475,7 +472,7 @@ public class PRSGame extends JPanel{
 
 	public void putNewPeer(final String name, final InetAddress ip, final int port) {
 		PeerInformation newpeer = new PeerInformation(0, ip, port, false, Move.NONE);
-		peer_list.put(name, newpeer);
+		peerMap.put(name, newpeer);
 		SwingUtilities.invokeLater(new Runnable() {
 		    public void run() {
 				PeerPanelControl.addPeer(peersPanel, name, 0, false);
@@ -623,14 +620,21 @@ public class PRSGame extends JPanel{
 		
 	}
 
-	public void arrivedInfo(HashMap<String, PeerInformation> data) {
-		peerMap = new ConcurrentHashMap<String, PeerInformation>(data);
+	public void arrivedInfo(HashMap<String, PeerInformation> data, String from) {
+		peerMap.putAll(data);
+		//peerMap.remove(playerName);
+		//peerMap.put(from, new PeerInformation(int score, InetAddress ip, int port, boolean ready, String move))
 		SwingUtilities.invokeLater(new Runnable() {
 		    public void run() {
 				initPeerPanel();
 				switchPanel(gamePanel);
 		    }
 	    });
+		
+	}
+
+	public void setIpAddress(InetAddress localIP) {
+		peerMap.get(playerName).setIpAddress(localIP);
 		
 	}
 

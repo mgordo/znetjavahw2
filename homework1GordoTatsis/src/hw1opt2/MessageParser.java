@@ -89,7 +89,7 @@ public class MessageParser extends Thread {
 			}else if(msg.getMsgtype().equals(MessageTypes.ALIVE)){
 				gameListening.hostAlive(msg.getFrom());
 			}else if(msg.getMsgtype().equals(MessageTypes.INFO)){
-				gameListening.arrivedInfo((HashMap<String,PeerInformation>)msg.getData());
+				gameListening.arrivedInfo((HashMap<String,PeerInformation>)msg.getData(), msg.getFrom());
 			}
 		}
 		

@@ -39,6 +39,7 @@ public class Listener extends Thread {
 			e.printStackTrace();
 		}
 		myport=port;
+		game.setIpAddress(localIP);
 		try {
 			serversocket = new ServerSocket(myport);
 		} catch (IOException e) {

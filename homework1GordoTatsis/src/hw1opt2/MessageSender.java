@@ -95,9 +95,7 @@ public class MessageSender {
 			this.port = port;
 		}
 		public void run() {
-			
-			Message m = new Message(PRSGame.getInstance().getName());
-			m.makeAliveMessage();
+			Message m = Message.makeAliveMessage(this.to);
 			sendMessage(m, to, ip, port);
 			futureHeartbeats.put(to, heartbeatScheduler.schedule(new HeartBeatRunnable(to, ip, port), heartbeatDelay, TimeUnit.MILLISECONDS));
 		}
