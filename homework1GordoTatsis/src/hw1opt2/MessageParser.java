@@ -6,6 +6,7 @@ package hw1opt2;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.StreamTokenizer;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -43,24 +44,60 @@ public class MessageParser extends Thread {
 	public void run() {
 		
 		String str=null;
+		Object message;
 		try {
-			BufferedReader buffrd = new BufferedReader( new InputStreamReader(socket.getInputStream()));
-			str = buffrd.readLine();
+			ObjectInputStream buffrd = new ObjectInputStream(socket.getInputStream());
+			message = buffrd.readObject();
 			
 		} catch (IOException e1) {
-			
-			e1.printStackTrace();
-		}
-		if(str==null){
+			System.out.println("Error while reading message object from socket");
 			try {
 				socket.close();
 			} catch (IOException e) {
-				
+				System.out.println("Could not close socket");
 				e.printStackTrace();
+			}
+			e1.printStackTrace();
+			return;
+		} catch (ClassNotFoundException e) {
+			System.out.println("Error while reading message, class not found");
+			e.printStackTrace();
+			try {
+				socket.close();
+			} catch (IOException e1) {
+				System.out.println("Could not close socket");
+				e1.printStackTrace();
 			}
 			return;
 		}
-		String[] msg2 = str.split(" ");
+		
+		if(message instanceof Message){
+			Message msg = (Message) message;
+			if(msg.getMsgtype().equals(MessageTypes.SEND_MOVE)){
+				gameListening.moveMade(msg.getFrom(), (String)msg.getData());
+			
+			}else if(msg.getMsgtype().equals(MessageTypes.READY)){
+				gameListening.peerIsReady(msg.getFrom());
+			}else if(msg.getMsgtype().equals(MessageTypes.BYE)){
+				gameListening.removePeer(msg.getFrom());
+			}else if(msg.getMsgtype().equals(MessageTypes.HELLO)){
+				gameListening.putNewPeer(msg.getFrom(), socket.getInetAddress(), (Integer)msg.getData());
+			}else if(msg.getMsgtype().equals(MessageTypes.ACT_FAST)){
+				gameListening.actFast();
+			}else if(msg.getMsgtype().equals(MessageTypes.NEED_INFO)){
+				gameListening.sendInfo(msg.getFrom());
+			}else if(msg.getMsgtype().equals(MessageTypes.ALIVE)){
+				gameListening.hostAlive(msg.getFrom());
+			}else if(msg.getMsgtype().equals(MessageTypes.INFO)){
+				gameListening.arrivedInfo((HashMap<String,PeerInformation>)msg.getData());
+			}
+		}
+		
+		
+		
+		
+		
+		/*String[] msg2 = str.split(" ");
 		ArrayList<String> msg = new ArrayList<String>(Arrays.asList(msg2));
 
 		//Message read stored in ArralyList msg
@@ -153,7 +190,7 @@ public class MessageParser extends Thread {
 		
 			
 					
-		}
+		}*/
 		try {
 			socket.close();
 		} catch (IOException e) {

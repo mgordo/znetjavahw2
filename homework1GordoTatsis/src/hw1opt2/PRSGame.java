@@ -7,6 +7,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,6 +15,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -27,7 +29,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.NumberFormatter;
 
-import constants.*;
+import constants.Move;
 import hw1opt2.Broadcast.GameInfo;
 
 public class PRSGame extends JPanel{
@@ -75,6 +77,8 @@ public class PRSGame extends JPanel{
     private volatile boolean ready = false;
     private volatile boolean actFastReceived = false;
     private volatile String move = null;
+    
+    private ConcurrentHashMap<String, PeerInformation> peerMap;
     
     private static DefaultFormatterFactory portFormatterFactory;
     static{
@@ -469,25 +473,15 @@ public class PRSGame extends JPanel{
 		
 	}
 
-	public void putNewPeer(final String name, final String ip, final int port) {
-		try {
-			myPeer.putNewPeer(name, ip, port);
-		} catch (NumberFormatException e) {
-			System.out.println("Error converting number");
-			e.printStackTrace();
-			return;
-		} catch (IOException e) {
-			System.out.println("Error creating socket for hello message");
-			e.printStackTrace();
-			return;
-		}
+	public void putNewPeer(final String name, final InetAddress ip, final int port) {
+		PeerInformation newpeer = new PeerInformation(0, ip, port, false, Move.NONE);
+		peer_list.put(name, newpeer);
 		SwingUtilities.invokeLater(new Runnable() {
 		    public void run() {
 				PeerPanelControl.addPeer(peersPanel, name, 0, false);
 				if (move != null){
-					Message m = new Message(playerName);
-					m.makeSendMoveMessage(move);
-					MessageSender.sendMessage(m, name, ip+" "+port);
+					Message m = Message.makeSendMoveMessage(playerName, move);
+					MessageSender.sendMessage(m, name, ip, port);
 				}
 		    }
 	    });
@@ -621,6 +615,23 @@ public class PRSGame extends JPanel{
 			for (String name: peers.keySet())
 				removePeer(panel, name);
 		}
+	}
+
+	public void sendInfo(String from) {
+		Message infomsg = Message.makeInfo(playerName, peerMap);
+		MessageSender.sendMessage(infomsg, from, peerMap.get(from).getIpAddress(), peerMap.get(from).getPort());
+		
+	}
+
+	public void arrivedInfo(HashMap<String, PeerInformation> data) {
+		peerMap = new ConcurrentHashMap<String, PeerInformation>(data);
+		SwingUtilities.invokeLater(new Runnable() {
+		    public void run() {
+				initPeerPanel();
+				switchPanel(gamePanel);
+		    }
+	    });
+		
 	}
 
 	
