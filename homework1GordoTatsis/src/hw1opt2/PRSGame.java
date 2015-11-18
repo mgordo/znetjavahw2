@@ -515,7 +515,6 @@ public class PRSGame extends JPanel{
 	}
 	
 	public void removePeer(final String name) {
-		//TODO: method gets called on errors to remove peer playerName, handle accordingly
 		if (name == null)
 			return;
 		if (peerMap.get(name).getMove() != null)
@@ -537,7 +536,6 @@ public class PRSGame extends JPanel{
 	}
 
 	public void putNewPeer(final String name, final InetAddress ip, final int port) {
-		//TODO: act fast message
 		if (peerMap.containsKey(name))
 			return;
 		PeerInformation peerInfo = new PeerInformation(0, ip, port, false, Move.NONE);

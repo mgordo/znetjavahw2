@@ -36,7 +36,7 @@ public class Listener extends Thread {
 			localIP = InetAddress.getLocalHost();
 		} catch (UnknownHostException e) {
 			System.out.println("Error getting local IP address in listener thread");
-			e.printStackTrace();
+			PRSGame.getInstance().TCPListenerError(e.getMessage());
 		}
 		myport=port;
 		game.setIpAddress(localIP);
@@ -52,7 +52,6 @@ public class Listener extends Thread {
 	
 	@Override
 	public void run(){
-		//TODO We will probably need to change this for when we need to close the thread
 		while(true){
 			Socket socket=null;
 			try {

@@ -29,7 +29,6 @@ public class Broadcast {
 	private static ScheduledFuture<?> futureBroadcast = null;
 	private static final Object broadcastingLock = new Object();
 	
-	//TODO: (optional) add timing information, discard games seen too far in the past
 	private static final ConcurrentHashMap<String,GameInfo> gameList = new ConcurrentHashMap<String,GameInfo>();
 	
 	public static void init(){
