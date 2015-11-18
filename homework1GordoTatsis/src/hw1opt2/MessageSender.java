@@ -1,12 +1,15 @@
 package hw1opt2;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -19,43 +22,64 @@ public class MessageSender {
 	private static final int heartbeatDelay = 5000;
 	private static final Map<String,ScheduledFuture<?>> futureHeartbeats = new ConcurrentHashMap<String,ScheduledFuture<?>>();
 	
-	private static final Executor sender = new ThreadPoolExecutor(1, 5, 1, TimeUnit.SECONDS,  new LinkedBlockingQueue<Runnable>());
+	private static final Map<String,Queue<Runnable>> messageQueues = new HashMap<String,Queue<Runnable>>();
+	private static final Executor sender = new ThreadPoolExecutor(1, 10, 1, TimeUnit.SECONDS,  new LinkedBlockingQueue<Runnable>());
 	private static final ScheduledExecutorService heartbeatScheduler = Executors.newScheduledThreadPool(1);
 	
 	public static void sendMessageToAllPeers(final Message m){
-		Map<String,String> addressMap = PRSGame.getInstance().getPeerObject().getAddress_list();
-		Set<String> recipients = addressMap.keySet();
+		Set<String> recipients = PRSGame.getInstance().getPeerSet();
+		String playerName = PRSGame.getInstance().getName();
 		
-		for (String to:recipients){
-			sendMessage(m, to, addressMap.get(to));
+		for (String peerName:recipients){
+			if (peerName.equals(playerName))
+				continue;
+			sendMessage(m, peerName);
 		}
 	}
 	
-	public static void sendMessage(final Message m, final String to, final String address){
+	public static void sendMessage(final Message m, final String to, final String ipString, final String portString){
 		try {
-			InetAddress ip = InetAddress.getByName(address.split(" ")[0]);
-			int port = Integer.valueOf(address.split(" ")[1]);
+			InetAddress ip = InetAddress.getByName(ipString);
+			int port = Integer.valueOf(portString);
 			sendMessage( m, to, ip, port);
 		}
 		catch (Exception e) {
+			//TODO: if initial hello message, notify PRSGame
 			PRSGame.getInstance().removePeer(to);
 		}
 	}
 	
+	public static void sendMessage(final Message m, final String to){
+		PeerInformation peerInfo = PRSGame.getInstance().getPeerInformation(to);
+		sendMessage(m, to, peerInfo.getIpAddress(), peerInfo.getPort());
+	}
+	
 	public static void sendMessage(final Message m, final String to, final InetAddress address, final int port){
-		sender.execute(new Runnable() {
-			public void run() {
+
+		if (messageQueues.get(to) == null)
+			messageQueues.put(to, new ConcurrentLinkedQueue<Runnable>());
+		final Queue<Runnable> messageQueue = messageQueues.get(to);
+		
+		Runnable messageRunnable = new Runnable() {
+			public void run() { 
+				if (messageQueue.isEmpty())
+					messageQueue.add(this);
+				else;
+					
 				Socket socket = null;
 				try {
 					socket = new Socket(address, port);
-					PrintWriter wr = new PrintWriter(socket.getOutputStream());
-					wr.write(m.toString());
-					wr.flush();
-					wr.close();
+					ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+					out.writeObject(m);
+					out.flush();
+					out.close();
 					socket.close();
+					System.out.println("DBG: MessageSender:  Sent "+m.getMsgtype()+" to "+to);
 				}
 				catch (IOException e) {
+					//TODO: if initial hello message, notify PRSGame
 					PRSGame.getInstance().removePeer(to);
+					System.err.println("DBG: MessageSender:  Failed to send "+m.getMsgtype()+" to "+to);
 				}
 				finally{
 					try{
@@ -64,8 +88,18 @@ public class MessageSender {
 					catch (Exception e) {
 					}
 				}
+				messageQueue.remove();
+				
+				if (!messageQueue.isEmpty())
+					sender.execute(messageQueue.peek());
 			}
-		});
+		};
+		
+		messageQueue.add(messageRunnable);
+		
+
+		if (messageQueue.size() == 1)
+			sender.execute(messageRunnable);
 	}
 	
 	public static void startHeartbeat(final String to, final InetAddress ip, final int port){

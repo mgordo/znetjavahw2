@@ -44,7 +44,7 @@ public class Listener extends Thread {
 			serversocket = new ServerSocket(myport);
 		} catch (IOException e) {
 			System.out.println("Error generating listening socket");
-			e.printStackTrace();
+			PRSGame.getInstance().TCPListenerError(e.getMessage());
 		} 
 		
 		

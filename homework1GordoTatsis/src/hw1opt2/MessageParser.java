@@ -3,20 +3,12 @@
  */
 package hw1opt2;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
-import java.io.StreamTokenizer;
-import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import constants.*;
+import constants.MessageTypes;
 
 /**
  * @author Miguel
@@ -41,7 +33,6 @@ public class MessageParser extends Thread {
 	@Override
 	public void run() {
 		
-		String str=null;
 		Object message;
 		try {
 			ObjectInputStream buffrd = new ObjectInputStream(socket.getInputStream());
@@ -71,12 +62,13 @@ public class MessageParser extends Thread {
 		
 		if(message instanceof Message){
 			Message msg = (Message) message;
+			System.out.println("DBG: MessageParser:  Received "+msg.getMsgtype()+" from "+msg.getFrom());
 			if(msg.getMsgtype().equals(MessageTypes.SEND_MOVE)){
 				gameListening.moveMade(msg.getFrom(), (String)msg.getData());
 			
-			}else if(msg.getMsgtype().equals(MessageTypes.READY)){
+			}/*else if(msg.getMsgtype().equals(MessageTypes.READY)){
 				gameListening.peerIsReady(msg.getFrom());
-			}else if(msg.getMsgtype().equals(MessageTypes.BYE)){
+			}*/else if(msg.getMsgtype().equals(MessageTypes.BYE)){
 				gameListening.removePeer(msg.getFrom());
 			}else if(msg.getMsgtype().equals(MessageTypes.HELLO)){
 				gameListening.putNewPeer(msg.getFrom(), socket.getInetAddress(), (Integer)msg.getData());
@@ -87,7 +79,7 @@ public class MessageParser extends Thread {
 			}else if(msg.getMsgtype().equals(MessageTypes.ALIVE)){
 				gameListening.hostAlive(msg.getFrom());
 			}else if(msg.getMsgtype().equals(MessageTypes.INFO)){
-				gameListening.arrivedInfo((HashMap<String,PeerInformation>)msg.getData(), msg.getFrom());
+				gameListening.arrivedInfo((ConcurrentHashMap<String,PeerInformation>)msg.getData(), msg.getFrom());
 			}
 		}
 		

@@ -2,14 +2,12 @@
  * 
  */
 package hw1opt2;
-import constants.*;
-
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.concurrent.*;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.*;
+import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
+
+import constants.Move;
+import constants.State;
 
 ;
 
@@ -25,7 +23,6 @@ public class Peer {
 	private ConcurrentHashMap<String,Boolean> ready_list;
 	private ArrayList<String> peer_names;
 	private int score;
-	private Listener listener_thread;
 	private String myhostname;
 	private ConcurrentHashMap<String,Integer> score_list;
 	private String myMove;
@@ -51,8 +48,8 @@ public class Peer {
 		ready_list = new ConcurrentHashMap<String,Boolean>();
 		score_list = new ConcurrentHashMap<String,Integer>();
 		peer_names = new ArrayList<String>();
-		listener_thread = new Listener(this,port,game);
-		listener_thread.start();
+		//listener_thread = new Listener(this,port,game);
+		//listener_thread.start();
 		setMyMove(Move.NONE);
 	}
 	

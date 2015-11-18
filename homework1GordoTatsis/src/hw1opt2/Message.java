@@ -1,11 +1,13 @@
 package hw1opt2;
 
 
+import java.io.Serializable;
 import java.util.Map;
 
 import constants.*;
-public class Message {
+public class Message implements Serializable{
 	
+	private static final long serialVersionUID = 8497493325648186271L;
 	private String msgtype;
 	private String from;
 	private Object data;
@@ -63,7 +65,7 @@ public class Message {
 	 * Modifies the MessageObject being called to an SendMove Message
 	 * @param myMove Move to be sent
 	 */
-	public static Message makeSendMoveMessage(String from, String myMove){
+	public static Message makeMoveMessage(String from, String myMove){
 		Message msg = new Message(from,MessageTypes.SEND_MOVE);
 		msg.setData(new String(myMove));
 		return msg;

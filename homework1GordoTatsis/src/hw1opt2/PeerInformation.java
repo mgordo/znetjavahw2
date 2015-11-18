@@ -3,21 +3,14 @@ package hw1opt2;
 import java.io.Serializable;
 import java.net.InetAddress;
 
-import constants.Move;
-
 public class PeerInformation implements Serializable{
 
-	
-	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 4659173952192446700L;
 	private int score;
 	private InetAddress ip_address;
 	private int port;
-	private boolean ready;
-	private Move myMove;
+	//private boolean ready;
+	private String move;
 	
 	public PeerInformation(int score, InetAddress ip, int port, boolean ready, String move){
 		this.setScore(score);
@@ -47,5 +40,13 @@ public class PeerInformation implements Serializable{
 
 	public void setPort(int port) {
 		this.port = port;
+	}
+
+	public String getMove() {
+		return move;
+	}
+
+	public void setMove(String move) {
+		this.move = move;
 	}
 }
