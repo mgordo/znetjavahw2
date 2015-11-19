@@ -22,6 +22,11 @@ import marketthings.ItemInterface;
 import marketthings.WishImpl;
 import marketthings.WishInterface;
 
+/**
+ * This class implements ClientInterface, and extends RemoteObject. Contains all the functionality for the client to register in the marketplace
+ * @author Nikolaos, Miguel
+ *
+ */
 @SuppressWarnings("serial")
 public class ClientImpl extends UnicastRemoteObject implements ClientInterface{
 
@@ -37,7 +42,11 @@ public class ClientImpl extends UnicastRemoteObject implements ClientInterface{
 	}
 	
 	
-	
+	/**
+	 * Constructor for the class. Will remotely register client according to param name
+	 * @param name Name of the client to register
+	 * @throws RemoteException
+	 */
 	public ClientImpl(String name) throws RemoteException{
 		super();
 		this.name = name;
@@ -63,6 +72,11 @@ public class ClientImpl extends UnicastRemoteObject implements ClientInterface{
 		
 		
 	}
+	
+	/**
+	 * This function should be called when the marketplace wants to inform the client of an item that 
+	 * @param wishItem String with the name of the item that was wished before by this clientImpl
+	 */
 	@Override
 	public void notifyWish(String wishItem) {
 		System.out.println("Your wish for "+wishItem+" has been granted! Visit Market to buy");
@@ -122,7 +136,7 @@ public class ClientImpl extends UnicastRemoteObject implements ClientInterface{
 			e1.printStackTrace();
 			return;
 		}
-		
+		//Deposit money in the account, indicated in the arguments used when running
 		try {
 			client.getMyAccount().deposit(Float.parseFloat(args[1]));
 		} catch (NumberFormatException | RemoteException | RejectedException e1) {
@@ -143,6 +157,36 @@ public class ClientImpl extends UnicastRemoteObject implements ClientInterface{
 		String input=null;
 		boolean main=true;
 		Command cmd;
+		//Add shutdown hook should the program close unexpectedly
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+		    public void run() { 
+		    	try {
+					marketInt.removeClient((ClientInterface)client);
+				} catch (RemoteException e) {
+					System.out.println("When closing, unable to remove from the Market");
+				}
+				System.out.println("Succesfully unregistered from the marketplace upon exit");
+				try {
+					LocateRegistry.getRegistry(REGISTRY_PORT_NUMBER).list();
+					
+				} catch (RemoteException e) {
+					try {
+						LocateRegistry.createRegistry(REGISTRY_PORT_NUMBER);
+					} catch (RemoteException e1) {
+						System.out.println("Could not locate registry for disconnection");
+						e1.printStackTrace();
+					}
+				}
+				try {
+					Naming.unbind("rmi://localhost/"+client.getName());
+				} catch (RemoteException | MalformedURLException | NotBoundException e) {
+					System.out.println("Could not unbind client");
+					e.printStackTrace();
+				}
+				System.out.println("RMI unbinding successful");
+		    }
+		 });
+		//Main loop
 		while(main){
 			System.out.println(USAGE);
 			try {
@@ -156,7 +200,7 @@ public class ClientImpl extends UnicastRemoteObject implements ClientInterface{
 					} catch (RejectedException | RemoteException e) {
 						System.out.println(e.getMessage());
 					}
-					System.out.println("Succes! You bought "+cmd.getItem()+"");
+					System.out.println("Success! You bought "+cmd.getItem()+"");
 					break;
 				case EXIT:
 					main=false;
@@ -187,7 +231,7 @@ public class ClientImpl extends UnicastRemoteObject implements ClientInterface{
 				case WISH:
 					WishImpl wish = new WishImpl(client.getName(),cmd.getPrice(),cmd.getItem());
 					marketInt.makeWish(wish);
-					System.out.println("Succes! Your wish for "+wish.getItem()+" has been placed");
+					System.out.println("Success! Your wish for "+wish.getItem()+" has been placed");
 					break;
 				default:
 					System.out.println("The command you entered is not valid");
@@ -230,7 +274,11 @@ public class ClientImpl extends UnicastRemoteObject implements ClientInterface{
 		System.exit(0);
 
 	}
-	
+	/**
+	 * private method used for parsing user input
+	 * @param input input from the user
+	 * @return Command with the parameters parsed
+	 */
 	private static Command parse(String input) {
 		
 		input = input.toUpperCase();
@@ -294,7 +342,11 @@ public class ClientImpl extends UnicastRemoteObject implements ClientInterface{
 		this.myAccount = myAccount;
 	}
 	
-	
+	/**
+	 * Private class that models a command input by the user
+	 * 
+	 *
+	 */
 	private static class Command{
 		
 		private Commands command;
@@ -321,7 +373,10 @@ public class ClientImpl extends UnicastRemoteObject implements ClientInterface{
 		
 	}
 
-
+	/**
+	 * This method should be called when the market wishes to notify the client of a successful sale
+	 * @param itemName Name of the item sold, and being notified to the client
+	 */
 	@Override
 	public void notifySale(String itemName) throws RemoteException {
 		System.out.println("The item "+itemName+" was sold in the market! Funds were added to your account");

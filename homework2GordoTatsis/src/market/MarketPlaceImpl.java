@@ -16,14 +16,21 @@ import client.ClientImpl;
 import client.ClientInterface;
 import marketthings.ItemInterface;
 import marketthings.WishInterface;
-
+/**
+ * This class implements MarketInterface, and provides the necessary methods to act as the Market described in HW2
+ * @author Miguel
+ *
+ */
 @SuppressWarnings("serial")
 public class MarketPlaceImpl extends UnicastRemoteObject implements MarketPlaceInterface {
 
 	private InventoryInterface inventory;
 	private static final int REGISTRY_PORT_NUMBER = 1099;
 	
-	
+	/**
+	 * Constructor for the class. Registers the new object in RMI Naming
+	 * @throws RemoteException
+	 */
 	public MarketPlaceImpl() throws RemoteException{
 		super();
 		inventory = new Inventory();
@@ -42,13 +49,19 @@ public class MarketPlaceImpl extends UnicastRemoteObject implements MarketPlaceI
 	}
 	
 		
-	
+	/**
+	 * To be called when a client wishes to register in this marketplace
+	 * @param client Client object that wishes to register
+	 */
 	@Override
 	public void registerClient(ClientInterface client) throws RemoteException {
 		inventory.addClient(client);
 
 	}
 
+	/**
+	 * To be called when a client wishes to check the inventory of the market
+	 */
 	@Override
 	public List<ItemInterface> showInventory() throws EmptyInventoryException {
 		List<ItemInterface> result = inventory.getAllItems();
@@ -58,6 +71,12 @@ public class MarketPlaceImpl extends UnicastRemoteObject implements MarketPlaceI
 		return result;
 	}
 
+	/**
+	 * This method should be called when client wishes to buy Item item. It will 
+	 * arrange payment with the client's bank. 
+	 * @param item Name of the item to be bought
+	 * @param client Client who wishes to purchase param item
+	 */
 	@Override
 	public void buy(String item, ClientInterface client) throws RemoteException, RejectedException {
 		if(!inventory.isClientRegistered(client)){
@@ -97,12 +116,20 @@ public class MarketPlaceImpl extends UnicastRemoteObject implements MarketPlaceI
 		
 	}
 
+	/**
+	 * This method adds a wish to the market
+	 * @param wish Wish object that is to be included in the market
+	 */
 	@Override
 	public void makeWish(WishInterface wish) throws RemoteException {
 		inventory.addWish(wish);
 
 	}
 
+	/**
+	 * This method is to be called when a client wishes to put an item on sale
+	 * @param it is the Item to be put on sale
+	 */
 	@Override
 	public void sell(ItemInterface it) throws RemoteException {
 		inventory.addItem(it);
@@ -118,6 +145,12 @@ public class MarketPlaceImpl extends UnicastRemoteObject implements MarketPlaceI
 		}
 	}
 
+	/**
+	 * This method returns a list of wishes for a given client
+	 * @param client Client object whose wishes are to be returned
+	 * @throws RemoteException if the list was empty
+	 * @return List with wishes, if list is empty an exception is raised
+	 */
 	@Override
 	public List<WishInterface> showWishes(ClientInterface client) throws RemoteException {
 		List<WishInterface> results = inventory.getWishes(client.getName());
@@ -145,6 +178,11 @@ public class MarketPlaceImpl extends UnicastRemoteObject implements MarketPlaceI
 
 
 
+	/**
+	 * This method removes a client from the marketplace, deletes his wishes and his sales
+	 * @param client Client object to be removed
+	 * @throws RemoteException if the client, client sales or client wishes could not be removed
+	 */
 	@Override
 	public void removeClient(ClientInterface client) throws RemoteException {
 		ArrayList<ItemInterface> items = new ArrayList<ItemInterface>();
